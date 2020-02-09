@@ -18,6 +18,8 @@ def part1_load(folder1, folder2):
         print(file)
         with open (file, "r") as the_file:
             the_file.read()
+
+def part1_load(folder1, folder2, n=1):
     # CHANGE WHATEVER YOU WANT *INSIDE* THIS FUNCTION.
     return pd.DataFrame(npr.randn(2,2)) # DUMMY RETURN
 
@@ -38,3 +40,4 @@ def part3_tfidf(df):
 # ADD WHATEVER YOU NEED HERE, INCLUDING BONUS CODE.
 
 part1_load("grain", "crude")
+
