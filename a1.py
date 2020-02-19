@@ -5,7 +5,8 @@ from math import log
 import numpy as np
 import numpy.random as npr
 from glob import glob
-# ADD ANY OTHER IMPORTS YOU LIKE
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 # DO NOT CHANGE THE SIGNATURES OF ANY DEFINED FUNCTIONS.
 # YOU CAN ADD "HELPER" FUNCTIONS IF YOU LIKE.
@@ -37,7 +38,7 @@ def files_to_dictlist(directory):  # function to get files into list of dicts fo
                     if word.isalpha(): # get rid of punctuation and numbers and lowercase all words
                         words.append(word.lower())
             for word in words:  # add new dictionary items or update existing ones
-                if word in df_line:  # TODO: tokenize???
+                if word in df_line:
                     df_line[word] += 1
                 else:
                     df_line[word] = 1
@@ -48,7 +49,7 @@ def files_to_dictlist(directory):  # function to get files into list of dicts fo
 def part2_vis(df, m):
     # DO NOT CHANGE
     assert isinstance(df, pd.DataFrame)
-    # CHANGE WHAT YOU WANT HERE
+
     df_sum = df.sum()[2:].sort_values(ascending = False)  # sum all columns except for the first two (name and class)
     df_lower = df_sum[m:] # get list of all indexes ranked lower than m
     df_top = df.drop(df_lower.index, 1) # get rid of all columns that are not in top m
@@ -56,19 +57,24 @@ def part2_vis(df, m):
     return df_top_grouped.T.plot(kind="bar")
 
 
-def part3_tfidf(df):  # TODO: there seems to be something wrong, this barely changes anything in the ranking/plot
+def part3_tfidf(df):
     # DO NOT CHANGE
     assert isinstance(df, pd.DataFrame)
 
-    # CHANGE WHAT YOU WANT HERE
-    for column in df:
-        if column != "doc_name" and column != "class_name":
-            zeros = df[column].isin([0]).sum()
-            idf = len(df)/zeros
-            df[column] = df[column] * log(idf)
-    return df
+    df2 = df.copy()  # create independent copy of df, so that original df doesnt get changed
+    for column in df2:
+        if column != "doc_name" and column != "class_name":  # exclude columns without numerical values
+            zeros = df2[column].isin([0]).sum() # get number of articles without word
+            idf = len(df2)/(len(df2) - zeros) # number of articles / number of articles including word
+            df2[column] = df2[column] * log(idf)  # multiply all raw counts in the column with the log of idf.
+    return df2
 
-# ADD WHATEVER YOU NEED HERE, INCLUDING BONUS CODE.
-df = part1_load("../grain", "../crude", 100)
-print(part3_tfidf(df))
-
+def train_and_evaluate(df):
+    model = SVC(gamma = "auto", kernel="rbf") # create model
+    x = df.drop(["class_name", "doc_name"], 1) # choose x data
+    y = df["class_name"] # choose y data
+    model.fit(x, y) # train model
+    y_pred = model.predict(x) # predict and evaluate:
+    print(confusion_matrix(y, y_pred))
+    print(classification_report(y, y_pred))
+    return accuracy_score(y, y_pred)
